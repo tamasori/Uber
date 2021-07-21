@@ -47,7 +47,15 @@ class Provider extends AbstractProvider
      */
     protected function getUserByToken($token)
     {
-        $response = $this->getHttpClient()->get(
+        $response_simple  = $this->getHttpClient()->get(
+            'https://api.uber.com/v1/me',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$token,
+                ],
+            ]
+        );
+        $response_partner = $this->getHttpClient()->get(
             'https://api.uber.com/v1/partners/me',
             [
                 'headers' => [
@@ -55,8 +63,30 @@ class Provider extends AbstractProvider
                 ],
             ]
         );
+        $response_reward  = $this->getHttpClient()->get(
+            'https://api.uber.com/v1/partners/me',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$token,
+                ],
+            ]
+        );
+        $response_tier    = $this->getHttpClient()->get(
+            'https://api.uber.com/v1/partners/me/rewards/tier',
+            [
+                'headers'     => [
+                    'Authorization' => 'Bearer '.$token,
+                ],
+                'http_errors' => false,
+            ]
+        );
+        $user_data        = array_merge(
+            json_decode((string)$response_tier->getBody(), true),
+            json_decode((string)$response_simple->getBody(), true),
+            json_decode((string)$response_partner->getBody(), true)
+        );
 
-        return json_decode((string) $response->getBody(), true);
+        return $user_data;
     }
 
     /**
@@ -64,12 +94,20 @@ class Provider extends AbstractProvider
      */
     protected function mapUserToObject(array $user)
     {
-        return (new User())->setRaw($user)->map([
-            'id'    => $user['driver_id'], 'nickname' => null,
-            'name'  => $user['first_name'].' '.$user['last_name'],
-            'email' => $user['email'], 'avatar' => $user['picture'],
-            'status' => $user['activation_status'] ?? "", 'uuid' => $user['uuid'],
-        ]);
+        ray($user);
+
+        return (new User())->setRaw($user)->map(
+            [
+                'id'       => $user['driver_id'],
+                'nickname' => null,
+                'name'     => $user['first_name'].' '.$user['last_name'],
+                'email'    => $user['email'],
+                'avatar'   => $user['picture'],
+                'status'   => $user['activation_status'] ?? "",
+                'uuid'     => $user['uuid'],
+                'tier'     => $user['current_tier'],
+            ]
+        );
     }
 
     /**
@@ -77,8 +115,11 @@ class Provider extends AbstractProvider
      */
     protected function getTokenFields($code)
     {
-        return array_merge(parent::getTokenFields($code), [
-            'grant_type' => 'authorization_code',
-        ]);
+        return array_merge(
+            parent::getTokenFields($code),
+            [
+                'grant_type' => 'authorization_code',
+            ]
+        );
     }
 }
