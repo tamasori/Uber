@@ -2,6 +2,7 @@
 
 namespace SocialiteProviders\Uber;
 
+use GuzzleHttp\Client;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
@@ -47,7 +48,7 @@ class Provider extends AbstractProvider
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            'https://api.uber.com/v1/me',
+            'https://api.uber.com/v1/partners/me',
             [
                 'headers' => [
                     'Authorization' => 'Bearer '.$token,
@@ -64,9 +65,10 @@ class Provider extends AbstractProvider
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
-            'id'    => $user['uuid'], 'nickname' => null,
+            'id'    => $user['driver_id'], 'nickname' => null,
             'name'  => $user['first_name'].' '.$user['last_name'],
             'email' => $user['email'], 'avatar' => $user['picture'],
+            'status' => $user['activation_status'] ?? "", 'uuid' => $user['uuid'],
         ]);
     }
 
