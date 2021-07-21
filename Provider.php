@@ -55,31 +55,30 @@ class Provider extends AbstractProvider
                 ],
             ]
         );
-        $response_partner = $this->getHttpClient()->get(
-            'https://api.uber.com/v1/partners/me',
-            [
-                'headers' => [
-                    'Authorization' => 'Bearer '.$token,
-                ],
-            ]
-        );
-        $response_reward  = $this->getHttpClient()->get(
-            'https://api.uber.com/v1/partners/me',
-            [
-                'headers' => [
-                    'Authorization' => 'Bearer '.$token,
-                ],
-            ]
-        );
-        $response_tier    = $this->getHttpClient()->get(
-            'https://api.uber.com/v1/partners/me/rewards/tier',
-            [
-                'headers'     => [
-                    'Authorization' => 'Bearer '.$token,
-                ],
-                'http_errors' => false,
-            ]
-        );
+        $response_partner = [];
+        try {
+            $response_partner = $this->getHttpClient()->get(
+                'https://api.uber.com/v1/partners/me',
+                [
+                    'headers' => [
+                        'Authorization' => 'Bearer '.$token,
+                    ],
+                ]
+            );
+        }catch (\Exception $e){}
+        $response_tier = [];
+        try {
+            $response_tier    = $this->getHttpClient()->get(
+                'https://api.uber.com/v1/partners/me/rewards/tier',
+                [
+                    'headers'     => [
+                        'Authorization' => 'Bearer '.$token,
+                    ],
+                    'http_errors' => false,
+                ]
+            );
+        }catch (\Exception $e){}
+
         $user_data        = array_merge(
             json_decode((string)$response_tier->getBody(), true),
             json_decode((string)$response_simple->getBody(), true),
@@ -94,8 +93,6 @@ class Provider extends AbstractProvider
      */
     protected function mapUserToObject(array $user)
     {
-        ray($user);
-
         return (new User())->setRaw($user)->map(
             [
                 'id'       => $user['driver_id'],
@@ -104,8 +101,8 @@ class Provider extends AbstractProvider
                 'email'    => $user['email'],
                 'avatar'   => $user['picture'],
                 'status'   => $user['activation_status'] ?? "",
-                'uuid'     => $user['uuid'],
-                'tier'     => $user['current_tier'],
+                'uuid'     => $user['uuid'] ?? "",
+                'tier'     => $user['current_tier'] ?? "",
             ]
         );
     }
