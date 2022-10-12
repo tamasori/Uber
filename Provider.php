@@ -58,32 +58,28 @@ class Provider extends AbstractProvider
         $response_simple = json_decode((string)$response_simple->getBody(), true);
 
         $response_partner = [];
-        try {
-            $response_partner = $this->getHttpClient()->get(
-                'https://api.uber.com/v1/partners/me',
-                [
-                    'headers' => [
-                        'Authorization' => 'Bearer '.$token,
-                    ],
-                ]
-            );
-            $response_partner = json_decode((string)$response_partner->getBody(), true);
-        }catch (\Exception $e){ }
+        $response_partner = $this->getHttpClient()->get(
+            'https://api.uber.com/v1/partners/me',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer '.$token,
+                ],
+            ]
+        );
+        $response_partner = json_decode((string)$response_partner->getBody(), true);
 
 
         $response_tier = [];
-        try {
-            $response_tier    = $this->getHttpClient()->get(
-                'https://api.uber.com/v1/partners/me/rewards/tier',
-                [
-                    'headers'     => [
-                        'Authorization' => 'Bearer '.$token,
-                    ],
-                    'http_errors' => false,
-                ]
-            );
-            $response_tier = json_decode((string)$response_tier->getBody(), true);
-        }catch (\Exception $e){ }
+        $response_tier    = $this->getHttpClient()->get(
+            'https://api.uber.com/v1/partners/me/rewards/tier',
+            [
+                'headers'     => [
+                    'Authorization' => 'Bearer '.$token,
+                ],
+                'http_errors' => false,
+            ]
+        );
+        $response_tier = json_decode((string)$response_tier->getBody(), true);
 
         $user_data        = array_merge(
             $response_tier,
